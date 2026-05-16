@@ -421,55 +421,7 @@ router.post('/upload', async (ctx, next) => {
           message: err.replaceAll(basename(ctx.request.file.path), "infile.epub").replaceAll(basename(outname), "outfile.kepub.epub")
         })
         return
-      }
-
-    } else if (mimetype == 'application/pdf' && ctx.request.body.pdfcropmargins) {
-      const dir = dirname(ctx.request.file.path)
-      const base = basename(ctx.request.file.path, '.pdf')
-      const outfile = resolvepath(join(dir, `${base}_cropped.pdf`))
-      let p = new Promise((resolve, reject) => {
-        let stderr = ''
-        const pdfcropmargins = spawn('pdfcropmargins', ['-s', '-u', '-o', outfile, basename(ctx.request.file.path)], {
-          // stdio: 'inherit',
-          cwd: dirname(ctx.request.file.path)
-        })
-        pdfcropmargins.once('error', function (err) {
-          fs.unlink(ctx.request.file.path, (err) => {
-            if (err) console.error(err)
-            else console.log('Removed file', ctx.request.file.path)
-          })
-          reject('pdfcropmargins error: ' + err)
-        })
-        pdfcropmargins.once('close', (code) => {
-          fs.unlink(ctx.request.file.path, (err) => {
-            if (err) console.error(err)
-            else console.log('Removed file', ctx.request.file.path)
-          })
-          if (code !== 0) {
-            reject('pdfcropmargins error code: ' + code + '\n' + stderr)
-            return
-          }
-
-          resolve(outfile)
-        })
-        pdfcropmargins.stdout.on('data', function (str) {
-          stderr += str
-          console.log('pdfcropmargins: ' + str)
-        })
-        pdfcropmargins.stderr.on('data', function (str) {
-          stderr += str
-          console.log('pdfcropmargins: ' + str)
-        })
-      })
-      try {
-        data = await p
-      } catch (err) {
-        flash(ctx, {
-          success: false,
-          message: err.replaceAll(basename(ctx.request.file.path), "infile.pdf").replaceAll(outfile, "outfile.pdf")
-        })
-        return
-      }
+			}
 
     } else {
       // No conversion
